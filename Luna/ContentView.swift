@@ -8,6 +8,12 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import PhotosUI
+
+enum InputMode {
+    case camera
+    case library
+}
 
 struct ContentView: View {
     @State private var selectedTab = 0
@@ -46,6 +52,8 @@ struct ScanView: View {
     @Binding var showingCamera: Bool
     @Binding var lastScanResult: ScanResult?
     @Environment(\.modelContext) private var modelContext
+    @State private var showInputSheet = false
+    @State private var inputMode: InputMode?
     
     var body: some View {
         NavigationView {
@@ -71,7 +79,7 @@ struct ScanView: View {
                         .overlay(
                             VStack {
                                 Image(systemName: "camera.fill")
-                                    .font(.system(size: 50))
+                                    .font(.accessibleLargeIcon)
                                     .foregroundColor(.blue)
                                 Text("Tap to scan your smile")
                                     .font(.headline)
@@ -79,11 +87,11 @@ struct ScanView: View {
                             }
                         )
                         .onTapGesture {
-                            simulateScan()
+                            showInputSheet = true
                         }
                     
                     // Scan Button
-                    Button(action: simulateScan) {
+                    Button(action: { showInputSheet = true }) {
                         HStack {
                             Image(systemName: "camera.fill")
                             Text("Start Dental Scan")
@@ -96,6 +104,23 @@ struct ScanView: View {
                         .cornerRadius(12)
                     }
                     .padding(.horizontal)
+                    .actionSheet(isPresented: $showInputSheet) {
+                        ActionSheet(
+                            title: Text("Select Input Source"),
+                            message: Text("Choose how you'd like to capture your dental scan"),
+                            buttons: [
+                                .default(Text("Take Photo")) {
+                                    inputMode = .camera
+                                    showingCamera = true
+                                },
+                                .default(Text("Choose Existing Photo")) {
+                                    inputMode = .library
+                                    showingCamera = true
+                                },
+                                .cancel()
+                            ]
+                        )
+                    }
                     
                     // Results Section
                     if let result = lastScanResult {
@@ -109,14 +134,16 @@ struct ScanView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .navigationViewStyle(StackNavigationViewStyle())
-        .fullScreenCover(isPresented: $showingCamera) {
-            CameraView(lastScanResult: $lastScanResult, modelContext: modelContext)
+        .fullScreenCover(isPresented: $showingCamera, onDismiss: {
+            inputMode = nil
+        }) {
+            CameraView(lastScanResult: $lastScanResult, modelContext: modelContext, inputMode: inputMode)
         }
     }
     
     private func simulateScan() {
-        // Open camera for real scanning
-        showingCamera = true
+        // Deprecated: Now using ActionSheet for input selection
+        // This function kept for potential future use
         
         // withAnimation {
         //     // Simulate a scan with mock data
@@ -138,21 +165,37 @@ struct ScanView: View {
 struct CameraView: View {
     @Binding var lastScanResult: ScanResult?
     let modelContext: ModelContext
+    let inputMode: InputMode?
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        ImagePickerView(
-            lastScanResult: $lastScanResult,
-            modelContext: modelContext,
-            onDismiss: {
-                presentationMode.wrappedValue.dismiss()
+        Group {
+            switch inputMode {
+            case .camera:
+                CameraPickerView(
+                    lastScanResult: $lastScanResult,
+                    modelContext: modelContext,
+                    onDismiss: {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                )
+            case .library:
+                PhotoLibraryPickerView(
+                    lastScanResult: $lastScanResult,
+                    modelContext: modelContext,
+                    onDismiss: {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                )
+            case nil:
+                EmptyView()
             }
-        )
+        }
         .ignoresSafeArea(.all) // This makes the camera fill the entire screen
     }
 }
 
-struct ImagePickerView: UIViewControllerRepresentable {
+struct CameraPickerView: UIViewControllerRepresentable {
     @Binding var lastScanResult: ScanResult?
     let modelContext: ModelContext
     let onDismiss: () -> Void
@@ -173,10 +216,10 @@ struct ImagePickerView: UIViewControllerRepresentable {
     }
     
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePickerView
+        let parent: CameraPickerView
         private let classificationService = DentalClassificationService()
         
-        init(_ parent: ImagePickerView) {
+        init(_ parent: CameraPickerView) {
             self.parent = parent
         }
         
@@ -233,25 +276,122 @@ struct ImagePickerView: UIViewControllerRepresentable {
     }
 }
 
+struct PhotoLibraryPickerView: UIViewControllerRepresentable {
+    @Binding var lastScanResult: ScanResult?
+    let modelContext: ModelContext
+    let onDismiss: () -> Void
+    
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration()
+        configuration.filter = .images
+        configuration.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: PhotoLibraryPickerView
+        private let classificationService = DentalClassificationService()
+        
+        init(_ parent: PhotoLibraryPickerView) {
+            self.parent = parent
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            guard let provider = results.first?.itemProvider else {
+                parent.onDismiss()
+                return
+            }
+            
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
+                    guard let self = self, let image = image as? UIImage else {
+                        DispatchQueue.main.async {
+                            self?.parent.onDismiss()
+                        }
+                        return
+                    }
+                    
+                    // Process the image with the ML model
+                    Task { @MainActor in
+                        do {
+                            let conditions = try await self.classificationService.classifyImage(image)
+                            
+                            // Convert UIImage to Data for storage
+                            let imageData = image.jpegData(compressionQuality: 0.8)
+                            
+                            // Create and save scan result
+                            let scanResult = ScanResult(
+                                timestamp: Date(),
+                                conditions: conditions,
+                                imageData: imageData
+                            )
+                            
+                            self.parent.modelContext.insert(scanResult)
+                            
+                            withAnimation {
+                                self.parent.lastScanResult = scanResult
+                            }
+                        } catch {
+                            print("Error classifying image: \(error)")
+                            
+                            // Fall back to default conditions if ML fails
+                            let fallbackResult = ScanResult(
+                                timestamp: Date(),
+                                conditions: ConditionResult.sampleData
+                            )
+                            
+                            self.parent.modelContext.insert(fallbackResult)
+                            
+                            withAnimation {
+                                self.parent.lastScanResult = fallbackResult
+                            }
+                        }
+                        
+                        self.parent.onDismiss()
+                    }
+                }
+            } else {
+                parent.onDismiss()
+            }
+        }
+    }
+}
+
 struct ResultsView: View {
     let result: ScanResult
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Scan Results")
-                .font(.headline)
-                .foregroundColor(.primary)
+        ZStack {
+            // Background with rounded rectangle
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.darkGrayBG)
+                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
             
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
-                ForEach(result.conditions, id: \.name) { condition in
-                    ConditionCard(condition: condition)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Scan Results")
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+                    ForEach(result.conditions, id: \.name) { condition in
+                        ConditionCard(condition: condition)
+                    }
                 }
+                .padding(.top, 8)
             }
+            .padding(20)
         }
-        .padding()
-.background(Color(UIColor.systemBackground))
-        .cornerRadius(12)
-        .shadow(radius: 2)
+        .background(Color.darkGrayBG)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -283,10 +423,15 @@ struct ConditionCard: View {
                     .foregroundColor(.secondary)
             }
             .padding(8)
-            .background(Color(.systemGray6))
+            .background(Color.accessibleCardBackground)
             .cornerRadius(8)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibleConditionCard(
+            name: condition.name,
+            risk: condition.risk.rawValue,
+            confidence: condition.confidence
+        )
     }
 }
 
@@ -324,6 +469,10 @@ struct HistoryView: View {
                             NavigationLink(destination: ScanHistoryDetailView(scanResult: scan)) {
                                 HistoryRow(scan: scan)
                             }
+                            .accessibleHistoryRow(
+                                date: scan.timestamp,
+                                conditionCount: scan.conditions.count
+                            )
                         }
                         .onDelete(perform: deleteScans)
                     }
@@ -453,11 +602,38 @@ struct EducationCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.systemGray6))
+        .background(Color.accessibleCardBackground)
         .cornerRadius(12)
     }
 }
 
+// MARK: - ResultsView Previews
+#Preview("ResultsView - Light Mode") {
+    ResultsView(result: ScanResult.sampleData.first!)
+        .environment(\.colorScheme, .light)
+        .padding()
+}
+
+#Preview("ResultsView - Dark Mode") {
+    ResultsView(result: ScanResult.sampleData.first!)
+        .environment(\.colorScheme, .dark)
+        .padding()
+}
+
+// MARK: - ConditionCard Previews
+#Preview("ConditionCard - Light Mode") {
+    ConditionCard(condition: ConditionResult.sampleData.first!)
+        .environment(\.colorScheme, .light)
+        .padding()
+}
+
+#Preview("ConditionCard - Dark Mode") {
+    ConditionCard(condition: ConditionResult.sampleData.first!)
+        .environment(\.colorScheme, .dark)
+        .padding()
+}
+
+// MARK: - ContentView Preview
 #Preview {
     ContentView()
         .modelContainer(for: ScanResult.self, inMemory: true)

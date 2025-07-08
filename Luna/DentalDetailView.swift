@@ -28,7 +28,7 @@ struct DentalDetailView: View {
                         .overlay(
                             VStack {
                                 Image(systemName: conditionIcon)
-                                    .font(.system(size: 50))
+                                    .font(.accessibleLargeIcon)
                                     .foregroundColor(.blue)
                                 Text(condition.name)
                                     .font(.title2)

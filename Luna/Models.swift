@@ -17,9 +17,9 @@ enum RiskLevel: String, CaseIterable, Codable {
     
     var color: Color {
         switch self {
-        case .low: return .green
-        case .medium: return .orange
-        case .high: return .red
+        case .low: return .vibrantGreen
+        case .medium: return .vibrantOrange
+        case .high: return .vibrantRed
         }
     }
 }

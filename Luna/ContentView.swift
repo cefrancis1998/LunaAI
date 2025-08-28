@@ -21,59 +21,33 @@ struct ContentView: View {
     @State private var lastScanResult: ScanResult? = nil
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ScanView(showingCamera: $showingCamera, lastScanResult: $lastScanResult)
-                .tabItem {
-                    Image(systemName: selectedTab == 0 ? "camera.viewfinder" : "camera")
-                        .font(.system(size: 16, weight: .medium))
-                    Text("Scan")
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
-                }
-                .tag(0)
+        ZStack {
+            // Premium background gradient
+            LinearGradient.lunaBackgroundGradient
+                .ignoresSafeArea()
             
-            HistoryView()
-                .tabItem {
-                    Image(systemName: selectedTab == 1 ? "chart.line.uptrend.xyaxis" : "chart.xyaxis.line")
-                        .font(.system(size: 16, weight: .medium))
-                    Text("History")
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
-                }
-                .tag(1)
+            // Main content area
+            TabView(selection: $selectedTab) {
+                ScanView(showingCamera: $showingCamera, lastScanResult: $lastScanResult)
+                    .tag(0)
+                
+                HistoryView()
+                    .tag(1)
+                
+                LearnView()
+                    .tag(2)
+            }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             
-            LearnView()
-                .tabItem {
-                    Image(systemName: selectedTab == 2 ? "book.fill" : "book")
-                        .font(.system(size: 16, weight: .medium))
-                    Text("Learn")
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
-                }
-                .tag(2)
+            // Custom floating tab bar overlay
+            VStack {
+                Spacer()
+                FloatingTabBar(selectedTab: $selectedTab)
+            }
         }
-        .tint(.lunaPrimary)
-        .background(Color.lunaCardBackground)
         .onAppear {
-            // Enhanced tab bar appearance
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(Color.lunaCardBackground)
-            appearance.shadowColor = UIColor(Color.black.opacity(0.1))
-            
-            // Normal state
-            appearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.lunaSecondaryText)
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-                .foregroundColor: UIColor(Color.lunaSecondaryText),
-                .font: UIFont.systemFont(ofSize: 12, weight: .medium)
-            ]
-            
-            // Selected state
-            appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.lunaPrimary)
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-                .foregroundColor: UIColor(Color.lunaPrimary),
-                .font: UIFont.systemFont(ofSize: 12, weight: .semibold)
-            ]
-            
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
+            // Hide default tab bar
+            UITabBar.appearance().isHidden = true
         }
     }
 }
@@ -84,128 +58,168 @@ struct ScanView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showInputSheet = false
     @State private var inputMode: InputMode?
+    @State private var headerOffset: CGFloat = 0
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Header with better spacing
-                    VStack(spacing: 12) {
-                        Text("Luna Smile")
-                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                            .foregroundColor(.lunaPrimary)
-                        
-                        Text("Your Pocket Dental Check-up")
-                            .font(.subheadline)
-                            .foregroundColor(.lunaSecondaryText)
-                            .opacity(0.8)
-                    }
-                    .padding(.top, 20)
-                    
-                    // Enhanced Camera Preview
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.lunaSecondaryBackground,
-                                    Color.lunaSecondaryBackground.opacity(0.7)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(height: 320)
-                        .overlay(
-                            VStack(spacing: 16) {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Premium hero section with parallax
+                        ZStack {
+                            // Gradient hero background
+                            RoundedRectangle(cornerRadius: 0)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.lunaPrimary.opacity(0.15),
+                                            Color.lunaSecondary.opacity(0.08),
+                                            Color.clear
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(height: 280)
+                                .offset(y: headerOffset * 0.5)
+                            
+                            // Hero content
+                            VStack(spacing: 20) {
+                                // Premium app icon
                                 ZStack {
                                     Circle()
-                                        .fill(Color.lunaPrimary.opacity(0.1))
+                                        .fill(LinearGradient.lunaBrandGradient)
                                         .frame(width: 80, height: 80)
+                                        .lunaColoredShadow(.lunaPrimary, radius: 16, y: 8)
                                     
-                                    Image(systemName: "camera.fill")
-                                        .font(.system(size: 32, weight: .medium))
-                                        .foregroundColor(.lunaPrimary)
+                                    Image(systemName: "mouth.fill")
+                                        .font(.system(size: 36, weight: .medium))
+                                        .foregroundColor(.white)
                                 }
+                                .scaleEffect(1.0 - headerOffset * 0.0002)
                                 
-                                VStack(spacing: 6) {
-                                    Text("Tap to scan your smile")
-                                        .font(.system(.headline, design: .rounded, weight: .semibold))
-                                        .foregroundColor(.lunaPrimary)
+                                VStack(spacing: 8) {
+                                    Text("Luna Smile")
+                                        .lunaHeroTitle()
+                                        .opacity(1.0 - headerOffset * 0.002)
                                     
-                                    Text("Take a photo or choose from library")
-                                        .font(.caption)
+                                    Text("AI-Powered Dental Health Analysis")
+                                        .font(.system(.subheadline, design: .rounded, weight: .medium))
                                         .foregroundColor(.lunaSecondaryText)
-                                        .opacity(0.7)
+                                        .opacity(0.8 - headerOffset * 0.001)
+                                        .multilineTextAlignment(.center)
                                 }
                             }
-                        )
-                        .shadow(
-                            color: Color.lunaPrimary.opacity(0.08),
-                            radius: 12,
-                            x: 0,
-                            y: 6
-                        )
-                        .onTapGesture {
-                            showInputSheet = true
+                            .padding(.top, 60)
+                            .offset(y: headerOffset * 0.3)
                         }
+                        
+                        // Main content with premium spacing
+                        VStack(spacing: 40) {
                     
-                    // Enhanced Scan Button
-                    Button(action: { showInputSheet = true }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                            Text("Start Dental Scan")
-                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                            // Premium camera preview with glass morphism
+                            VStack(spacing: 24) {
+                                RoundedRectangle(cornerRadius: 28)
+                                    .frame(height: 340)
+                                    .lunaFloatingCard()
+                                    .overlay(
+                                        VStack(spacing: 24) {
+                                            // Floating camera icon with animation
+                                            ZStack {
+                                                Circle()
+                                                    .fill(LinearGradient.lunaBrandGradient)
+                                                    .frame(width: 100, height: 100)
+                                                    .lunaColoredShadow(.lunaPrimary, radius: 20, y: 10)
+                                                
+                                                Image(systemName: "camera.viewfinder")
+                                                    .font(.system(size: 40, weight: .medium))
+                                                    .foregroundColor(.white)
+                                            }
+                                            
+                                            VStack(spacing: 12) {
+                                                Text("Ready to Analyze Your Smile")
+                                                    .lunaSectionTitle()
+                                                    .multilineTextAlignment(.center)
+                                                
+                                                Text("Advanced AI-powered dental analysis\nin just seconds")
+                                                    .lunaBodyText()
+                                                    .multilineTextAlignment(.center)
+                                                    .opacity(0.8)
+                                            }
+                                        }
+                                    )
+                                    .onTapGesture {
+                                        showInputSheet = true
+                                    }
+                                
+                                // Premium scan button
+                                Button(action: { showInputSheet = true }) {
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "camera.fill")
+                                            .font(.system(size: 20, weight: .semibold))
+                                        Text("Start Dental Scan")
+                                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                                    }
+                                }
+                                .lunaPrimaryButton()
+                            }
+                            .padding(.horizontal, 24)
+                    
+                            // Results section with premium styling
+                            if let result = lastScanResult {
+                                VStack(alignment: .leading, spacing: 24) {
+                                    HStack {
+                                        Text("Latest Results")
+                                            .lunaSectionTitle()
+                                        
+                                        Spacer()
+                                        
+                                        Text("Just now")
+                                            .lunaCaptionText()
+                                    }
+                                    .padding(.horizontal, 24)
+                                    
+                                    ResultsView(result: result)
+                                        .padding(.horizontal, 24)
+                                }
+                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            }
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            LinearGradient(
-                                colors: [Color.lunaPrimary, Color.lunaPrimary.opacity(0.8)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .shadow(
-                            color: Color.lunaPrimary.opacity(0.3),
-                            radius: 8,
-                            x: 0,
-                            y: 4
-                        )
+                        .padding(.bottom, 120) // Space for floating tab bar
                     }
-                    .padding(.horizontal, 20)
-                    .actionSheet(isPresented: $showInputSheet) {
-                        ActionSheet(
-                            title: Text("Select Input Source"),
-                            message: Text("Choose how you'd like to capture your dental scan"),
-                            buttons: [
-                                .default(Text("Take Photo")) {
-                                    inputMode = .camera
-                                    showingCamera = true
-                                },
-                                .default(Text("Choose Existing Photo")) {
-                                    inputMode = .library
-                                    showingCamera = true
-                                },
-                                .cancel()
-                            ]
-                        )
-                    }
-                    
-                    // Results Section
-                    if let result = lastScanResult {
-                        ResultsView(result: result)
-                            .transition(.opacity)
-                            .padding(.bottom, 100) // Extra padding to prevent tab bar overlap
-                    }
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    headerOffset = geo.frame(in: .global).minY
+                                }
+                                .onChange(of: geo.frame(in: .global).minY) { _, value in
+                                    headerOffset = value
+                                }
+                        }
+                    )
                 }
-                .padding()
             }
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .actionSheet(isPresented: $showInputSheet) {
+            ActionSheet(
+                title: Text("Select Input Source"),
+                message: Text("Choose how you'd like to capture your dental scan"),
+                buttons: [
+                    .default(Text("📸 Take Photo")) {
+                        inputMode = .camera
+                        showingCamera = true
+                    },
+                    .default(Text("📱 Choose Photo")) {
+                        inputMode = .library
+                        showingCamera = true
+                    },
+                    .cancel()
+                ]
+            )
+        }
         .fullScreenCover(isPresented: $showingCamera, onDismiss: {
             inputMode = nil
         }) {
@@ -309,6 +323,13 @@ struct CameraPickerView: UIViewControllerRepresentable {
                     
                     // Convert UIImage to Data for storage
                     let imageData = image.jpegData(compressionQuality: 0.8)
+                    let validation = ScanResult.validateImageData(imageData)
+                    
+                    if validation.isValid {
+                        print("✅ CameraPickerView: Successfully converted and validated image - Size: \(imageData?.count ?? 0) bytes")
+                    } else {
+                        print("⚠️ CameraPickerView: Image validation warning - \(validation.errorMessage ?? "Unknown issue") - Size: \(imageData?.count ?? 0) bytes")
+                    }
                     
                     // Create and save scan result
                     let scanResult = ScanResult(
@@ -318,6 +339,7 @@ struct CameraPickerView: UIViewControllerRepresentable {
                     )
                     
                     parent.modelContext.insert(scanResult)
+                    print("✅ CameraPickerView: Saved scan result with image data to SwiftData")
                     
                     withAnimation {
                         self.parent.lastScanResult = scanResult
@@ -325,10 +347,12 @@ struct CameraPickerView: UIViewControllerRepresentable {
                 } catch {
                     print("Error classifying image: \(error)")
                     
-                    // Fall back to default conditions if ML fails
+                    // Fall back to default conditions if ML fails, but preserve the original image
+                    let imageData = image.jpegData(compressionQuality: 0.8)
                     let fallbackResult = ScanResult(
                         timestamp: Date(),
-                        conditions: ConditionResult.sampleData
+                        conditions: ConditionResult.sampleData,
+                        imageData: imageData
                     )
                     
                     parent.modelContext.insert(fallbackResult)
@@ -399,6 +423,13 @@ struct PhotoLibraryPickerView: UIViewControllerRepresentable {
                             
                             // Convert UIImage to Data for storage
                             let imageData = image.jpegData(compressionQuality: 0.8)
+                            let validation = ScanResult.validateImageData(imageData)
+                            
+                            if validation.isValid {
+                                print("✅ PhotoLibraryPickerView: Successfully converted and validated image - Size: \(imageData?.count ?? 0) bytes")
+                            } else {
+                                print("⚠️ PhotoLibraryPickerView: Image validation warning - \(validation.errorMessage ?? "Unknown issue") - Size: \(imageData?.count ?? 0) bytes")
+                            }
                             
                             // Create and save scan result
                             let scanResult = ScanResult(
@@ -408,6 +439,7 @@ struct PhotoLibraryPickerView: UIViewControllerRepresentable {
                             )
                             
                             self.parent.modelContext.insert(scanResult)
+                            print("✅ PhotoLibraryPickerView: Saved scan result with image data to SwiftData")
                             
                             withAnimation {
                                 self.parent.lastScanResult = scanResult
@@ -415,10 +447,12 @@ struct PhotoLibraryPickerView: UIViewControllerRepresentable {
                         } catch {
                             print("Error classifying image: \(error)")
                             
-                            // Fall back to default conditions if ML fails
+                            // Fall back to default conditions if ML fails, but preserve the original image
+                            let imageData = image.jpegData(compressionQuality: 0.8)
                             let fallbackResult = ScanResult(
                                 timestamp: Date(),
-                                conditions: ConditionResult.sampleData
+                                conditions: ConditionResult.sampleData,
+                                imageData: imageData
                             )
                             
                             self.parent.modelContext.insert(fallbackResult)
@@ -442,212 +476,307 @@ struct ResultsView: View {
     let result: ScanResult
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Enhanced Header
+        VStack(alignment: .leading, spacing: 24) {
+            // Premium header with glass morphism
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Scan Results")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
-                        .foregroundColor(.lunaPrimaryText)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Analysis Complete")
+                        .lunaSectionTitle()
                     
-                    Text("Tap any condition for details")
-                        .font(.caption)
-                        .foregroundColor(.lunaSecondaryText)
-                        .opacity(0.7)
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color.lunaSafeGreen)
+                            .frame(width: 8, height: 8)
+                        
+                        Text("\(result.conditions.count) conditions analyzed")
+                            .lunaCaptionText()
+                    }
                 }
                 
                 Spacer()
                 
-                // Results timestamp
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(result.timestamp, style: .time)
-                        .font(.caption2)
-                        .foregroundColor(.lunaSecondaryText)
-                    Text(result.timestamp, style: .date)
-                        .font(.caption2)
-                        .foregroundColor(.lunaSecondaryText)
+                // Confidence indicator
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Accuracy")
+                        .lunaCaptionText()
+                    
+                    let avgConfidence = result.conditions.map { $0.confidence }.reduce(0, +) / Double(result.conditions.count)
+                    Text("\(Int(avgConfidence * 100))%")
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+                        .foregroundColor(.lunaPrimary)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .lunaGlassCard(cornerRadius: 12)
             }
             
-            // Enhanced Grid
+            // Premium conditions grid
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2),
-                spacing: 16
+                columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: 2),
+                spacing: 20
             ) {
                 ForEach(result.conditions, id: \.name) { condition in
                     ConditionCard(condition: condition)
                 }
             }
         }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.lunaCardBackground)
-                .shadow(
-                    color: Color.black.opacity(0.08),
-                    radius: 12,
-                    x: 0,
-                    y: 6
-                )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.lunaSecondaryBackground, lineWidth: 1)
-        )
+        .padding(28)
+        .lunaFloatingCard(cornerRadius: 24)
     }
 }
 
 struct ConditionCard: View {
     let condition: ConditionResult
+    @State private var isPressed = false
     
     var body: some View {
         NavigationLink(destination: DentalDetailView(condition: condition)) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header with risk indicator
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(condition.risk.color)
-                        .frame(width: 10, height: 10)
-                        .shadow(color: condition.risk.color.opacity(0.4), radius: 2, x: 0, y: 1)
+            VStack(alignment: .leading, spacing: 16) {
+                // Premium header with condition image thumbnail
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(condition.risk.color.opacity(0.1))
+                            .frame(width: 44, height: 44)
+                        
+                        Image(conditionImageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(condition.risk.color.opacity(0.3), lineWidth: 1)
+                            )
+                    }
                     
-                    Text(condition.name)
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundColor(.lunaPrimaryText)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(condition.name)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundColor(.lunaPrimaryText)
+                            .lineLimit(1)
+                        
+                        Text(condition.risk.rawValue)
+                            .font(.system(.caption2, design: .rounded, weight: .medium))
+                            .foregroundColor(condition.risk.color)
+                    }
                     
                     Spacer()
                 }
                 
-                // Risk level and confidence
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(condition.risk.rawValue)
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
-                        .foregroundColor(condition.risk.color)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(condition.risk.color.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    
+                // Confidence meter
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Confidence")
-                            .font(.caption2)
-                            .foregroundColor(.lunaSecondaryText)
+                            .lunaCaptionText()
                         
                         Spacer()
                         
                         Text("\(Int(condition.confidence * 100))%")
-                            .font(.system(.caption2, design: .rounded, weight: .semibold))
-                            .foregroundColor(.lunaPrimaryText)
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                            .foregroundColor(.lunaPrimary)
                     }
-                }
-                
-                // Subtle arrow indicator
-                HStack {
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption2)
-                        .foregroundColor(.lunaSecondaryText)
-                        .opacity(0.5)
+                    
+                    // Progress bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.lunaSecondaryBackground)
+                                .frame(height: 6)
+                            
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(LinearGradient.lunaBrandGradient)
+                                .frame(width: geometry.size.width * CGFloat(condition.confidence), height: 6)
+                        }
+                    }
+                    .frame(height: 6)
                 }
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.lunaSecondaryBackground)
-                    .shadow(
-                        color: Color.black.opacity(0.04),
-                        radius: 4,
-                        x: 0,
-                        y: 2
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
-            )
+            .padding(20)
+            .lunaGlassCard(cornerRadius: 16)
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
+        .onTapGesture {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+            }
+        }
         .accessibleConditionCard(
             name: condition.name,
             risk: condition.risk.rawValue,
             confidence: condition.confidence
         )
     }
+    
+    private var conditionImageName: String {
+        switch condition.name.lowercased() {
+        case "calculus": return "tartar"
+        case "caries": return "caries"
+        case "gingivitis": return "gingivitis"
+        case "tooth discoloration": return "discoloration"
+        case "mouth ulcer": return "ulcer"
+        case "hypodontia": return "hypodontia"
+        default: return "caries"
+        }
+    }
 }
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ScanResult.timestamp, order: .reverse) private var scanResults: [ScanResult]
+    @State private var selectedTimeFrame: TimeFrame = .all
+    
+    enum TimeFrame: String, CaseIterable {
+        case all = "All"
+        case week = "This Week"
+        case month = "This Month"
+        case threeMonths = "3 Months"
+    }
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Enhanced Header
-                VStack(spacing: 8) {
-                    Text("Scan History")
-                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                        .foregroundColor(.lunaPrimaryText)
-                    
-                    if !scanResults.isEmpty {
-                        Text("\(scanResults.count) scan\(scanResults.count == 1 ? "" : "s")")
-                            .font(.subheadline)
-                            .foregroundColor(.lunaSecondaryText)
-                            .opacity(0.7)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 20)
-                .padding(.bottom, 24)
+            ZStack {
+                LinearGradient.lunaBackgroundGradient.ignoresSafeArea()
                 
-                if scanResults.isEmpty {
-                    // Enhanced Empty State
-                    Spacer()
-                    VStack(spacing: 20) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.lunaSecondaryBackground)
-                                .frame(width: 100, height: 100)
-                            
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .font(.system(size: 40, weight: .medium))
-                                .foregroundColor(.lunaPrimary)
-                        }
-                        
-                        VStack(spacing: 8) {
-                            Text("No scan history yet")
-                                .font(.system(.title2, design: .rounded, weight: .semibold))
-                                .foregroundColor(.lunaPrimaryText)
-                            
-                            Text("Take your first dental scan to see results here")
-                                .font(.body)
-                                .foregroundColor(.lunaSecondaryText)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 32)
-                        }
-                    }
-                    Spacer()
-                } else {
-                    List {
-                        ForEach(scanResults) { scan in
-                            NavigationLink(destination: ScanHistoryDetailView(scanResult: scan)) {
-                                HistoryRow(scan: scan)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Premium hero header
+                        VStack(spacing: 24) {
+                            // Stats overview
+                            VStack(spacing: 16) {
+                                Text("Health Journey")
+                                    .lunaHeroTitle()
+                                
+                                HStack(spacing: 20) {
+                                    StatCard(
+                                        title: "Total Scans",
+                                        value: "\(scanResults.count)",
+                                        icon: "camera.viewfinder",
+                                        color: .lunaPrimary
+                                    )
+                                    
+                                    StatCard(
+                                        title: "This Month",
+                                        value: "\(thisMonthScans)",
+                                        icon: "calendar",
+                                        color: .lunaSecondary
+                                    )
+                                    
+                                    StatCard(
+                                        title: "Health Score",
+                                        value: healthScore,
+                                        icon: "heart.fill",
+                                        color: .lunaSafeGreen
+                                    )
+                                }
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                            .listRowSeparator(.hidden)
-                            .accessibleHistoryRow(
-                                date: scan.timestamp,
-                                conditionCount: scan.conditions.count
-                            )
+                            .padding(.horizontal, 24)
+                            .padding(.top, 40)
+                            
+                            // Time filter
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    ForEach(TimeFrame.allCases, id: \.self) { timeFrame in
+                                        TimeFilterButton(
+                                            timeFrame: timeFrame,
+                                            selectedTimeFrame: selectedTimeFrame,
+                                            action: {
+                                                withAnimation(.spring()) {
+                                                    selectedTimeFrame = timeFrame
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                            }
                         }
-                        .onDelete(perform: deleteScans)
+                        .padding(.bottom, 40)
+                        
+                        // Timeline content
+                        if filteredScanResults.isEmpty {
+                            premiumEmptyState
+                        } else {
+                            LazyVStack(spacing: 20) {
+                                ForEach(Array(filteredScanResults.enumerated()), id: \.element.id) { index, scan in
+                                    TimelineRow(
+                                        scan: scan,
+                                        isFirst: index == 0,
+                                        isLast: index == filteredScanResults.count - 1
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                        }
                     }
-                    .listStyle(PlainListStyle())
+                    .padding(.bottom, 120) // Space for floating tab bar
                 }
             }
+            .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+    
+    // MARK: - Computed Properties
+    private var thisMonthScans: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        return scanResults.filter { calendar.isDate($0.timestamp, equalTo: now, toGranularity: .month) }.count
+    }
+    
+    private var healthScore: String {
+        guard !scanResults.isEmpty else { return "N/A" }
+        let recentScans = Array(scanResults.prefix(5))
+        let lowRiskCount = recentScans.flatMap { $0.conditions }.filter { $0.risk == .low }.count
+        let totalConditions = recentScans.flatMap { $0.conditions }.count
+        let score = totalConditions > 0 ? (lowRiskCount * 100) / totalConditions : 0
+        return "\(score)%"
+    }
+    
+    private var filteredScanResults: [ScanResult] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch selectedTimeFrame {
+        case .all:
+            return scanResults
+        case .week:
+            return scanResults.filter { calendar.isDate($0.timestamp, equalTo: now, toGranularity: .weekOfYear) }
+        case .month:
+            return scanResults.filter { calendar.isDate($0.timestamp, equalTo: now, toGranularity: .month) }
+        case .threeMonths:
+            let threeMonthsAgo = calendar.date(byAdding: .month, value: -3, to: now) ?? now
+            return scanResults.filter { $0.timestamp >= threeMonthsAgo }
+        }
+    }
+    
+    private var premiumEmptyState: some View {
+        VStack(spacing: 32) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient.lunaBrandGradient)
+                    .frame(width: 120, height: 120)
+                    .lunaColoredShadow(.lunaPrimary, radius: 20, y: 10)
+                
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 48, weight: .medium))
+                    .foregroundColor(.white)
+            }
+            
+            VStack(spacing: 16) {
+                Text("Your Journey Awaits")
+                    .lunaSectionTitle()
+                
+                Text("Start tracking your dental health\nwith your first scan")
+                    .lunaBodyText()
+                    .multilineTextAlignment(.center)
+                    .opacity(0.8)
+            }
+        }
+        .padding(.vertical, 80)
     }
     
     private func deleteScans(offsets: IndexSet) {
@@ -659,143 +788,267 @@ struct HistoryView: View {
     }
 }
 
-struct HistoryRow: View {
-    let scan: ScanResult
+// MARK: - TimeFilterButton Component
+struct TimeFilterButton: View {
+    let timeFrame: HistoryView.TimeFrame
+    let selectedTimeFrame: HistoryView.TimeFrame
+    let action: () -> Void
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Enhanced thumbnail
-            if let imageData = scan.imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.lunaSecondaryBackground, lineWidth: 1)
-                    )
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.lunaPrimary.opacity(0.1),
-                                Color.lunaPrimary.opacity(0.05)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 64, height: 64)
-                    .overlay(
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.lunaPrimary)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.lunaSecondaryBackground, lineWidth: 1)
-                    )
+        Button(action: action) {
+            let isSelected = selectedTimeFrame == timeFrame
+            let textColor = isSelected ? Color.white : Color.lunaPrimary
+            let buttonBackground = isSelected ? AnyShapeStyle(LinearGradient.lunaBrandGradient) : AnyShapeStyle(Color.lunaPrimary.opacity(0.1))
+            
+            Text(timeFrame.rawValue)
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .foregroundColor(textColor)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(buttonBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.lunaPrimary.opacity(0.2), lineWidth: 1)
+                )
+        }
+    }
+}
+
+// MARK: - StatCard Component
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(color)
             }
             
-            // Enhanced content
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text(scan.timestamp, style: .date)
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundColor(.lunaPrimaryText)
-                    
-                    Spacer()
-                    
-                    Text(scan.timestamp, style: .time)
-                        .font(.caption)
-                        .foregroundColor(.lunaSecondaryText)
+            VStack(spacing: 4) {
+                Text(value)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundColor(.lunaPrimaryText)
+                
+                Text(title)
+                    .lunaCaptionText()
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .lunaGlassCard()
+    }
+}
+
+// MARK: - TimelineRow Component
+struct TimelineRow: View {
+    let scan: ScanResult
+    let isFirst: Bool
+    let isLast: Bool
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            // Timeline indicator
+            VStack(spacing: 0) {
+                if !isFirst {
+                    Rectangle()
+                        .fill(Color.lunaSecondaryBackground)
+                        .frame(width: 2, height: 24)
                 }
                 
-                // Enhanced risk indicator
-                if let highestRisk = scan.conditions.max(by: { $0.risk.rawValue < $1.risk.rawValue }) {
-                    HStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(riskColor.opacity(0.2))
+                        .frame(width: 28, height: 28)
+                    
+                    if let primaryCondition = scan.conditions.first {
+                        Image(conditionImageName(for: primaryCondition.name))
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 20, height: 20)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(riskColor, lineWidth: 1.5)
+                            )
+                    } else {
                         Circle()
-                            .fill(highestRisk.risk.color)
+                            .fill(riskColor)
                             .frame(width: 8, height: 8)
-                            .shadow(color: highestRisk.risk.color.opacity(0.4), radius: 1, x: 0, y: 0.5)
-                        
-                        Text("Highest: \(highestRisk.risk.rawValue)")
-                            .font(.caption)
-                            .foregroundColor(highestRisk.risk.color)
-                            .fontWeight(.medium)
+                            .lunaColoredShadow(riskColor, radius: 4, y: 2)
+                    }
+                }
+                
+                if !isLast {
+                    Rectangle()
+                        .fill(Color.lunaSecondaryBackground)
+                        .frame(width: 2, height: 24)
+                }
+            }
+            
+            // Scan content
+            NavigationLink(destination: ScanHistoryDetailView(scanResult: scan)) {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Header
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(scan.timestamp, style: .date)
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundColor(.lunaPrimaryText)
+                            
+                            Text(scan.timestamp, style: .time)
+                                .lunaCaptionText()
+                        }
                         
                         Spacer()
                         
-                        // Condition count badge
-                        Text("\(scan.conditions.count)")
-                            .font(.system(.caption2, design: .rounded, weight: .bold))
-                            .foregroundColor(.lunaPrimaryText)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.lunaSecondaryBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("\(scan.conditions.count)")
+                                .font(.system(.title2, design: .rounded, weight: .bold))
+                                .foregroundColor(.lunaPrimary)
+                            
+                            Text("conditions")
+                                .lunaCaptionText()
+                        }
+                    }
+                    
+                    // Risk indicators
+                    HStack(spacing: 12) {
+                        ForEach(["low", "medium", "high"], id: \.self) { riskLevel in
+                            let count = scan.conditions.filter { $0.risk.rawValue.lowercased() == riskLevel }.count
+                            if count > 0 {
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(colorForRisk(riskLevel))
+                                        .frame(width: 8, height: 8)
+                                    
+                                    Text("\(count)")
+                                        .font(.system(.caption2, design: .rounded, weight: .medium))
+                                        .foregroundColor(colorForRisk(riskLevel))
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(colorForRisk(riskLevel).opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.lunaSecondaryText)
+                            .opacity(0.6)
                     }
                 }
+                .padding(20)
+                .lunaElevatedCard()
             }
-            
-            // Subtle arrow
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.lunaSecondaryText)
-                .opacity(0.6)
+            .buttonStyle(PlainButtonStyle())
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.lunaCardBackground)
-                .shadow(
-                    color: Color.black.opacity(0.04),
-                    radius: 6,
-                    x: 0,
-                    y: 3
-                )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
-        )
+    }
+    
+    private var riskColor: Color {
+        let highRisk = scan.conditions.contains { $0.risk == .high }
+        let mediumRisk = scan.conditions.contains { $0.risk == .medium }
+        
+        if highRisk { return .lunaDangerRed }
+        if mediumRisk { return .lunaWarningOrange }
+        return .lunaSafeGreen
+    }
+    
+    private func colorForRisk(_ risk: String) -> Color {
+        switch risk {
+        case "low": return .lunaSafeGreen
+        case "medium": return .lunaWarningOrange
+        case "high": return .lunaDangerRed
+        default: return .lunaSecondaryText
+        }
+    }
+    
+    private func conditionImageName(for conditionName: String) -> String {
+        switch conditionName.lowercased() {
+        case "calculus": return "tartar"
+        case "caries": return "caries"
+        case "gingivitis": return "gingivitis"
+        case "tooth discoloration": return "discoloration"
+        case "mouth ulcer": return "ulcer"
+        case "hypodontia": return "hypodontia"
+        default: return "caries"
+        }
     }
 }
+
 
 struct LearnView: View {
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 32) {
-                    // Enhanced Header
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Learn About Oral Health")
-                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                            .foregroundColor(.lunaPrimaryText)
-                        
-                        Text("Explore dental conditions and prevention tips")
-                            .font(.subheadline)
-                            .foregroundColor(.lunaSecondaryText)
-                            .opacity(0.8)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    
-                    // Enhanced Grid
-                    LazyVGrid(
-                        columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2),
-                        spacing: 20
-                    ) {
-                        ForEach(educationTopics, id: \.title) { topic in
-                            EducationCard(topic: topic)
+            ZStack {
+                LinearGradient.lunaBackgroundGradient.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Premium hero header
+                        VStack(spacing: 24) {
+                            VStack(spacing: 16) {
+                                Text("Dental Knowledge")
+                                    .lunaHeroTitle()
+                                
+                                Text("Expert insights and prevention tips\nto keep your smile healthy")
+                                    .lunaBodyText()
+                                    .multilineTextAlignment(.center)
+                                    .opacity(0.8)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, 40)
+                            
+                            // Featured health tip
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundColor(.lunaWarningOrange)
+                                    
+                                    Text("Daily Tip")
+                                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                                        .foregroundColor(.lunaPrimaryText)
+                                    
+                                    Spacer()
+                                }
+                                
+                                Text("Brush your teeth for at least 2 minutes, twice daily. Use gentle circular motions and don't forget to clean your tongue!")
+                                    .lunaBodyText()
+                                    .lineLimit(nil)
+                            }
+                            .padding(24)
+                            .lunaFloatingCard()
+                            .padding(.horizontal, 24)
                         }
+                        .padding(.bottom, 40)
+                        
+                        // Premium education cards in vertical layout
+                        LazyVStack(spacing: 20) {
+                            ForEach(educationTopics, id: \.title) { topic in
+                                EducationCard(topic: topic)
+                            }
+                        }
+                        .padding(.horizontal, 24) // Consistent with other sections
+                        .padding(.bottom, 120) // Space for floating tab bar
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 120) // Extra padding to prevent tab bar overlap
                 }
             }
+            .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
@@ -807,61 +1060,113 @@ struct LearnView: View {
 
 struct EducationCard: View {
     let topic: EducationTopic
+    @State private var isPressed = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Enhanced icon section
-            ZStack {
+            // Header section matching Daily Tip format
+            HStack(spacing: 12) {
+                // Icon circle with condition-specific color
                 Circle()
-                    .fill(Color.lunaPrimary.opacity(0.1))
-                    .frame(width: 48, height: 48)
+                    .fill(iconColor)
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: topic.icon)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    )
+                    .lunaColoredShadow(iconColor, radius: 4, y: 2)
                 
-                Image(systemName: topic.icon)
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(.lunaPrimary)
-            }
-            
-            // Enhanced content
-            VStack(alignment: .leading, spacing: 8) {
-                Text(topic.title)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundColor(.lunaPrimaryText)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(topic.title)
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                        .foregroundColor(.lunaPrimaryText)
+                        .lineLimit(1)
+                    
+                    Text(conditionCategoryText)
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundColor(iconColor)
+                        .lineLimit(1)
+                }
                 
-                Text(topic.description)
-                    .font(.caption)
-                    .foregroundColor(.lunaSecondaryText)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-            }
-            
-            Spacer()
-            
-            // Subtle "Learn more" indicator
-            HStack {
                 Spacer()
-                Image(systemName: "arrow.up.right")
-                    .font(.caption2)
-                    .foregroundColor(.lunaSecondaryText)
-                    .opacity(0.5)
+            }
+            
+            // Description text matching Daily Tip format
+            Text(topic.description)
+                .font(.system(.body, design: .rounded))
+                .foregroundColor(.lunaSecondaryText)
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
+                .opacity(0.9)
+            
+            // Learn More button matching Daily Tip format
+            HStack {
+                Text("Learn More")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundColor(iconColor)
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(iconColor)
+            }
+            .padding(.top, 4)
+        }
+        .padding(24) // Same padding as Daily Tip card
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lunaFloatingCard() // Same styling as Daily Tip card
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: isPressed)
+        .onTapGesture {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
             }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: 160, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.lunaCardBackground)
-                .shadow(
-                    color: Color.black.opacity(0.06),
-                    radius: 8,
-                    x: 0,
-                    y: 4
-                )
+    }
+    
+    private var iconColor: Color {
+        switch topic.icon {
+        case "heart.fill": return .lunaDangerRed
+        case "shield.fill": return .lunaSafeGreen
+        case "exclamationmark.triangle.fill": return .lunaWarningOrange
+        case "mouth.fill": return .lunaPrimary
+        default: return .lunaSecondary
+        }
+    }
+    
+    private var iconGradient: LinearGradient {
+        LinearGradient(
+            colors: [iconColor, iconColor.opacity(0.8)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
         )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
-        )
+    }
+    
+    private var conditionCategoryText: String {
+        switch topic.title.lowercased() {
+        case "calculus": return "Learn about tartar buildup"
+        case "caries": return "Understanding cavities"
+        case "gingivitis": return "Gum health basics"
+        case "discoloration": return "Tooth whitening tips"
+        case "mouth ulcers": return "Healing and prevention"
+        case "hypodontia": return "Missing teeth info"
+        default: return "Dental health info"
+        }
+    }
+    
+    private var conditionImageName: String {
+        switch topic.title.lowercased() {
+        case "calculus": return "tartar"
+        case "caries": return "caries"
+        case "gingivitis": return "gingivitis"
+        case "discoloration": return "discoloration"
+        case "mouth ulcers": return "ulcer"
+        case "hypodontia": return "hypodontia"
+        default: return "caries"
+        }
     }
 }
 

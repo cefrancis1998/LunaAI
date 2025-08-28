@@ -14,30 +14,41 @@ struct ScanHistoryDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Scan Image
-                if let imageData = scanResult.imageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 300)
-                        .clipped()
-                } else {
-                    RoundedRectangle(cornerRadius: 0)
-                        .fill(LinearGradient(
-                            colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(height: 300)
-                        .overlay(
-                            VStack {
-                                Image(systemName: "camera.fill")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.blue)
-                                Text("Original image unavailable")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
+                Group {
+                    if let imageData = scanResult.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 300)
+                            .clipped()
+                            .onAppear {
+                                print("✅ ScanHistoryDetailView: Image data found - Size: \(imageData.count) bytes")
                             }
-                        )
+                    } else {
+                        RoundedRectangle(cornerRadius: 0)
+                            .fill(LinearGradient(
+                                colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(height: 300)
+                            .overlay(
+                                VStack {
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.blue)
+                                    Text("Original image unavailable")
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                }
+                            )
+                            .onAppear {
+                                let validation = ScanResult.validateImageData(scanResult.imageData)
+                                if !validation.isValid {
+                                    print("❌ ScanHistoryDetailView: Invalid image - \(validation.errorMessage ?? "Unknown error")")
+                                }
+                            }
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 16) {

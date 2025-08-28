@@ -142,6 +142,9 @@ struct DentalDetailView: View {
                             .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
                     )
                     
+                    // Visual Gallery Section
+                    visualGallerySection
+                    
                     // Enhanced Severity Alert
                     severityAlert
                     
@@ -204,6 +207,89 @@ struct DentalDetailView: View {
         default:
             return "A dental condition that requires attention and proper care."
         }
+    }
+    
+    private var visualGallerySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Visual Examples")
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundColor(.lunaPrimaryText)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    // Main condition image
+                    VStack(spacing: 8) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.lunaSecondaryBackground)
+                                .frame(width: 120, height: 100)
+                            
+                            Image(conditionImageName)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 120, height: 100)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(condition.risk.color.opacity(0.3), lineWidth: 2)
+                                )
+                        }
+                        .lunaColoredShadow(condition.risk.color, radius: 8, y: 4)
+                        
+                        Text("Example")
+                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .foregroundColor(.lunaSecondaryText)
+                    }
+                    
+                    // Additional example images (using same image with different overlays for demo)
+                    ForEach(0..<3, id: \.self) { index in
+                        VStack(spacing: 8) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.lunaSecondaryBackground)
+                                    .frame(width: 100, height: 80)
+                                
+                                Image(conditionImageName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 100, height: 80)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(severityColors[index].opacity(0.1))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(severityColors[index].opacity(0.4), lineWidth: 1.5)
+                                    )
+                            }
+                            .lunaSoftShadow()
+                            
+                            Text(severityLabels[index])
+                                .font(.system(.caption2, design: .rounded, weight: .medium))
+                                .foregroundColor(.lunaSecondaryText)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            Text("Tap images to see detailed examples and learn about severity levels")
+                .font(.system(.caption, design: .rounded))
+                .foregroundColor(.lunaSecondaryText)
+                .opacity(0.8)
+                .padding(.horizontal, 20)
+        }
+        .padding(.vertical, 16)
+        .lunaElevatedCard()
+    }
+    
+    private var severityColors: [Color] {
+        [.lunaSafeGreen, .lunaWarningOrange, .lunaDangerRed]
+    }
+    
+    private var severityLabels: [String] {
+        ["Mild", "Moderate", "Severe"]
     }
     
     private var severityAlert: some View {

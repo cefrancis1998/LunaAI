@@ -144,6 +144,99 @@ extension Color {
     }
 }
 
+// MARK: - Premium Gradient Colors
+extension LinearGradient {
+    /// Premium brand gradient - primary to secondary
+    static var lunaBrandGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.lunaPrimary, Color.lunaSecondary],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    /// Subtle background gradient for premium feel
+    static var lunaBackgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.lunaBackground,
+                Color.lunaSecondaryBackground.opacity(0.3)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    /// Card elevation gradient with depth
+    static var lunaCardGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.lunaCardBackground,
+                Color.lunaCardBackground.opacity(0.95)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+}
+
+extension Color {
+    /// Glass morphism background
+    static let lunaGlassBackground = Color(
+        light: Color.white.opacity(0.7),
+        dark: Color.black.opacity(0.3)
+    )
+    
+    /// Floating element background with blur effect
+    static let lunaFloatingBackground = Color(
+        light: Color.white.opacity(0.85),
+        dark: Color.black.opacity(0.6)
+    )
+}
+
+// MARK: - Premium Shadow Definitions
+extension View {
+    /// Soft elevation shadow for cards
+    func lunaSoftShadow() -> some View {
+        self.shadow(
+            color: Color.black.opacity(0.08),
+            radius: 12,
+            x: 0,
+            y: 6
+        )
+    }
+    
+    /// Medium elevation shadow for floating elements
+    func lunaMediumShadow() -> some View {
+        self.shadow(
+            color: Color.black.opacity(0.12),
+            radius: 16,
+            x: 0,
+            y: 8
+        )
+    }
+    
+    /// Strong shadow for prominent elements
+    func lunaStrongShadow() -> some View {
+        self.shadow(
+            color: Color.black.opacity(0.2),
+            radius: 24,
+            x: 0,
+            y: 12
+        )
+    }
+    
+    /// Colored shadow for brand elements
+    func lunaColoredShadow(_ color: Color, radius: CGFloat = 8, y: CGFloat = 4) -> some View {
+        self.shadow(
+            color: color.opacity(0.3),
+            radius: radius,
+            x: 0,
+            y: y
+        )
+    }
+}
+
 // MARK: - Enhanced Accessibility Colors
 extension Color {
     /// Enhanced card background for better contrast
@@ -180,6 +273,176 @@ extension Font {
     static let accessibleSmallIcon = Font.system(.title3, design: .default)
 }
 
+// MARK: - Premium Card Styles
+extension View {
+    /// Premium card with glass morphism effect
+    func lunaGlassCard(cornerRadius: CGFloat = 16) -> some View {
+        self
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(Color.lunaGlassBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.5),
+                                        Color.white.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+            )
+            .lunaSoftShadow()
+    }
+    
+    /// Premium elevated card with gradient background
+    func lunaElevatedCard(cornerRadius: CGFloat = 16) -> some View {
+        self
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(LinearGradient.lunaCardGradient)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(Color.lunaSecondaryBackground.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .lunaMediumShadow()
+    }
+    
+    /// Premium floating card with blur effect
+    func lunaFloatingCard(cornerRadius: CGFloat = 20) -> some View {
+        self
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(Color.lunaFloatingBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.lunaPrimary.opacity(0.2),
+                                        Color.lunaSecondary.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
+                    )
+            )
+            .lunaStrongShadow()
+    }
+}
+
+// MARK: - Premium Button Styles
+extension View {
+    /// Primary action button with gradient and animations
+    func lunaPrimaryButton(disabled: Bool = false) -> some View {
+        let buttonGradient = disabled ? 
+            LinearGradient(colors: [Color.gray, Color.gray], startPoint: .leading, endPoint: .trailing) :
+            LinearGradient.lunaBrandGradient
+        
+        let shadowColor = disabled ? Color.gray : Color.lunaPrimary
+        
+        return self
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(buttonGradient)
+            )
+            .lunaColoredShadow(shadowColor, radius: 12, y: 6)
+            .opacity(disabled ? 0.6 : 1.0)
+    }
+    
+    /// Secondary button with subtle styling
+    func lunaSecondaryButton() -> some View {
+        self
+            .foregroundColor(.lunaPrimary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.lunaPrimary.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.lunaPrimary.opacity(0.3), lineWidth: 1.5)
+                    )
+            )
+            .lunaSoftShadow()
+    }
+    
+    /// Floating action button
+    func lunaFloatingActionButton() -> some View {
+        self
+            .foregroundColor(.white)
+            .frame(width: 56, height: 56)
+            .background(
+                Circle()
+                    .fill(LinearGradient.lunaBrandGradient)
+            )
+            .lunaColoredShadow(.lunaPrimary, radius: 16, y: 8)
+    }
+}
+
+// MARK: - Animation Helpers
+extension View {
+    /// Smooth spring animation for interactions
+    func lunaSpringAnimation(duration: Double = 0.3) -> some View {
+        let springAnimation = Animation.spring(response: duration, dampingFraction: 0.8, blendDuration: 0)
+        return self.animation(springAnimation, value: 1)
+    }
+    
+    /// Gentle fade transition
+    func lunaFadeTransition() -> some View {
+        let fadeAnimation = Animation.easeInOut(duration: 0.2)
+        return self.animation(fadeAnimation, value: 1)
+    }
+    
+    /// Smooth scale effect on tap
+    func lunaScaleEffect(_ scale: CGFloat = 0.98) -> some View {
+        self.scaleEffect(scale)
+    }
+}
+
+// MARK: - Premium Text Styles
+extension Text {
+    /// Hero title with premium styling
+    func lunaHeroTitle() -> some View {
+        self
+            .font(.system(.largeTitle, design: .rounded, weight: .bold))
+            .foregroundColor(.lunaPrimaryText)
+            .multilineTextAlignment(.center)
+    }
+    
+    /// Section heading with premium styling
+    func lunaSectionTitle() -> some View {
+        self
+            .font(.system(.title2, design: .rounded, weight: .bold))
+            .foregroundColor(.lunaPrimaryText)
+    }
+    
+    /// Body text with premium styling
+    func lunaBodyText() -> some View {
+        self
+            .font(.system(.body, design: .rounded))
+            .foregroundColor(.lunaSecondaryText)
+            .lineSpacing(2)
+    }
+    
+    /// Caption with premium styling
+    func lunaCaptionText() -> some View {
+        self
+            .font(.system(.caption, design: .rounded, weight: .medium))
+            .foregroundColor(.lunaSecondaryText)
+    }
+}
+
 // MARK: - VoiceOver Enhancement Helpers
 extension View {
     /// Adds comprehensive accessibility labels for condition cards
@@ -206,30 +469,33 @@ extension View {
 // MARK: - Usage Examples
 
 /*
- Usage examples:
+ Premium Usage Examples:
  
- // Background colors
- Rectangle()
-     .fill(Color.darkGrayBG)
+ // Premium cards
+ VStack { ... }
+     .padding()
+     .lunaGlassCard()
  
- RoundedRectangle(cornerRadius: 12)
-     .fill(Color.cardGray)
+ VStack { ... }
+     .padding()
+     .lunaElevatedCard()
  
- // Risk indicators
- Text("Safe")
-     .foregroundColor(Color.vibrantGreen)
+ // Premium buttons
+ Button("Action") { ... }
+     .lunaPrimaryButton()
  
- Text("Warning")
-     .foregroundColor(Color.vibrantOrange)
+ Button("Secondary") { ... }
+     .lunaSecondaryButton()
  
- Text("Danger")
-     .foregroundColor(Color.vibrantRed)
+ // Premium text
+ Text("Title")
+     .lunaHeroTitle()
  
- // Risk indicator backgrounds
- HStack {
-     Circle()
-         .fill(Color.vibrantGreen)
-         .frame(width: 8, height: 8)
-     Text("Low Risk")
- }
+ Text("Content")
+     .lunaBodyText()
+ 
+ // Shadows and effects
+ VStack { ... }
+     .lunaSoftShadow()
+     .lunaSpringAnimation()
  */

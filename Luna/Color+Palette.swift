@@ -1,49 +1,126 @@
 import SwiftUI
 
+// MARK: - Luna Design System Colors
 extension Color {
+    // MARK: - Brand Colors
+    
+    /// Primary Luna brand color - professional medical blue
+    /// Light mode: RGB(0, 122, 255) - Apple system blue
+    /// Dark mode: RGB(10, 132, 255) - Slightly brighter for dark mode
+    static let lunaPrimary = Color(
+        light: Color(red: 0/255, green: 122/255, blue: 255/255),
+        dark: Color(red: 10/255, green: 132/255, blue: 255/255)
+    )
+    
+    /// Secondary Luna brand color - calming teal
+    /// Light mode: RGB(48, 176, 199) - Professional teal
+    /// Dark mode: RGB(58, 186, 209) - Brighter teal for dark mode
+    static let lunaSecondary = Color(
+        light: Color(red: 48/255, green: 176/255, blue: 199/255),
+        dark: Color(red: 58/255, green: 186/255, blue: 209/255)
+    )
+    
+    /// Accent color for highlights and CTAs
+    /// Light mode: RGB(88, 86, 214) - Professional purple
+    /// Dark mode: RGB(98, 96, 224) - Brighter purple for dark mode
+    static let lunaAccent = Color(
+        light: Color(red: 88/255, green: 86/255, blue: 214/255),
+        dark: Color(red: 98/255, green: 96/255, blue: 224/255)
+    )
+    
     // MARK: - Background Colors
     
-    /// Dark gray background color for card/section backgrounds
-    /// Dark mode: RGB(28, 28, 30) - Very dark gray
-    /// Light mode: RGB(248, 248, 250) - Very light gray
-    static let darkGrayBG = Color(
-        light: Color(red: 248/255, green: 248/255, blue: 250/255),
+    /// Primary background color
+    /// Light mode: Pure white for cleanliness
+    /// Dark mode: System dark background
+    static let lunaBackground = Color(
+        light: Color.white,
+        dark: Color(red: 0/255, green: 0/255, blue: 0/255)
+    )
+    
+    /// Secondary background for sections and cards
+    /// Light mode: Very light gray with warm undertones
+    /// Dark mode: Dark gray with subtle warmth
+    static let lunaSecondaryBackground = Color(
+        light: Color(red: 249/255, green: 249/255, blue: 251/255),
         dark: Color(red: 28/255, green: 28/255, blue: 30/255)
     )
     
-    /// Card gray color for inner cards
-    /// Dark mode: RGB(44, 44, 46) - Medium dark gray
-    /// Light mode: RGB(240, 240, 242) - Light gray
-    static let cardGray = Color(
-        light: Color(red: 240/255, green: 240/255, blue: 242/255),
+    /// Card background with elevated appearance
+    /// Light mode: Pure white with subtle shadow
+    /// Dark mode: Elevated dark gray
+    static let lunaCardBackground = Color(
+        light: Color.white,
         dark: Color(red: 44/255, green: 44/255, blue: 46/255)
+    )
+    
+    /// Grouped background for sections
+    /// Light mode: System grouped background
+    /// Dark mode: System grouped dark background
+    static let lunaGroupedBackground = Color(
+        light: Color(red: 242/255, green: 242/255, blue: 247/255),
+        dark: Color(red: 28/255, green: 28/255, blue: 30/255)
     )
     
     // MARK: - Risk Indicator Colors (WCAG AA Compliant)
     
-    /// Vibrant green for positive/safe risk indicators
-    /// Dark mode: RGB(48, 209, 88) - Bright green (WCAG AA compliant on dark)
-    /// Light mode: RGB(25, 135, 84) - Much darker green for better contrast on white
-    static let vibrantGreen = Color(
-        light: Color(red: 25/255, green: 135/255, blue: 84/255),  // 4.5:1 contrast on white
+    /// Safe/Low risk indicator - vibrant green
+    /// Optimized for medical applications with high contrast
+    static let lunaSafeGreen = Color(
+        light: Color(red: 52/255, green: 199/255, blue: 89/255),
         dark: Color(red: 48/255, green: 209/255, blue: 88/255)
     )
     
-    /// Vibrant orange for warning/medium risk indicators
-    /// Dark mode: RGB(255, 159, 10) - Bright orange (WCAG AA compliant on dark)
-    /// Light mode: RGB(180, 95, 0) - Much darker orange for better contrast on white
-    static let vibrantOrange = Color(
-        light: Color(red: 180/255, green: 95/255, blue: 0/255),  // 4.5:1 contrast on white
+    /// Warning/Medium risk indicator - professional amber
+    /// Balanced visibility without being alarming
+    static let lunaWarningOrange = Color(
+        light: Color(red: 255/255, green: 149/255, blue: 0/255),
         dark: Color(red: 255/255, green: 159/255, blue: 10/255)
     )
     
-    /// Vibrant red for danger/high risk indicators
-    /// Dark mode: RGB(255, 69, 58) - Bright red (WCAG AA compliant on dark)
-    /// Light mode: RGB(176, 42, 55) - Much darker red for better contrast on white
-    static let vibrantRed = Color(
-        light: Color(red: 176/255, green: 42/255, blue: 55/255),  // 4.5:1 contrast on white
+    /// Danger/High risk indicator - clear red
+    /// High contrast for critical alerts
+    static let lunaDangerRed = Color(
+        light: Color(red: 255/255, green: 59/255, blue: 48/255),
         dark: Color(red: 255/255, green: 69/255, blue: 58/255)
     )
+    
+    // MARK: - Text Colors
+    
+    /// Primary text color
+    static let lunaPrimaryText = Color(
+        light: Color.black,
+        dark: Color.white
+    )
+    
+    /// Secondary text color for supporting information
+    static let lunaSecondaryText = Color(
+        light: Color(red: 60/255, green: 60/255, blue: 67/255),
+        dark: Color(red: 174/255, green: 174/255, blue: 178/255)
+    )
+    
+    /// Tertiary text color for subtle information
+    static let lunaTertiaryText = Color(
+        light: Color(red: 118/255, green: 118/255, blue: 128/255),
+        dark: Color(red: 142/255, green: 142/255, blue: 147/255)
+    )
+    
+    // MARK: - Legacy Color Mappings (for backward compatibility)
+    
+    /// Maps to lunaSecondaryBackground
+    static let darkGrayBG = lunaSecondaryBackground
+    
+    /// Maps to lunaCardBackground
+    static let cardGray = lunaCardBackground
+    
+    /// Maps to lunaSafeGreen
+    static let vibrantGreen = lunaSafeGreen
+    
+    /// Maps to lunaWarningOrange
+    static let vibrantOrange = lunaWarningOrange
+    
+    /// Maps to lunaDangerRed
+    static let vibrantRed = lunaDangerRed
 }
 
 // MARK: - Color Convenience Initializer

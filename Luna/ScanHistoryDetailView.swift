@@ -12,23 +12,22 @@ struct ScanHistoryDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 // Scan Image
                 if let imageData = scanResult.imageData, let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 300)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .shadow(radius: 5)
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 300)
+                        .clipped()
                 } else {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 0)
                         .fill(LinearGradient(
                             colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.1)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ))
-                        .frame(height: 200)
+                        .frame(height: 300)
                         .overlay(
                             VStack {
                                 Image(systemName: "camera.fill")
@@ -70,7 +69,7 @@ struct ScanHistoryDetailView: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+.background(Color.lunaGroupedBackground)
                     .cornerRadius(12)
                     
                     // Conditions Results
@@ -92,6 +91,7 @@ struct ScanHistoryDetailView: View {
                     // Overall Risk Assessment
                     overallRiskView
                 }
+                .padding(.top, 20)
                 .padding(.horizontal)
                 .padding(.bottom, 100)
             }

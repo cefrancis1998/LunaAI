@@ -12,87 +12,146 @@ struct DentalDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 // Header Image
-                AsyncImage(url: URL(string: conditionImageURL)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .overlay(
-                            VStack {
-                                Image(systemName: conditionIcon)
-                                    .font(.accessibleLargeIcon)
-                                    .foregroundColor(.blue)
-                                Text(condition.name)
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.blue)
-                            }
+                Image(conditionImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 250)
+                    .clipped()
+                    .overlay(
+                        // Subtle gradient overlay for better text readability
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.0), Color.black.opacity(0.3)],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
-                }
-                .frame(height: 250)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(radius: 10)
-                
-                VStack(alignment: .leading, spacing: 16) {
-                    // Condition Title and Status
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(condition.name)
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                            
+                    )
+                    .overlay(
+                        // Condition name overlay at bottom
+                        VStack {
+                            Spacer()
                             HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(condition.name)
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                    
+                                    HStack(spacing: 6) {
+                                        Circle()
+                                            .fill(condition.risk.color)
+                                            .frame(width: 8, height: 8)
+                                            .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 0.5)
+                                        
+                                        Text(condition.risk.rawValue)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 16)
+                        }
+                    )
+                
+                VStack(alignment: .leading, spacing: 24) {
+                    // Enhanced Title and Status Section
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Main title
+                        Text(condition.name)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                            .foregroundColor(.lunaPrimaryText)
+                        
+                        // Risk and confidence row
+                        HStack(spacing: 20) {
+                            // Risk indicator
+                            HStack(spacing: 10) {
                                 Circle()
                                     .fill(condition.risk.color)
-                                    .frame(width: 12, height: 12)
+                                    .frame(width: 14, height: 14)
+                                    .shadow(color: condition.risk.color.opacity(0.4), radius: 2, x: 0, y: 1)
                                 
-                                Text(condition.risk.rawValue)
-                                    .font(.title3)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(condition.risk.color)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Risk Level")
+                                        .font(.caption)
+                                        .foregroundColor(.lunaSecondaryText)
+                                    
+                                    Text(condition.risk.rawValue)
+                                        .font(.system(.headline, design: .rounded, weight: .semibold))
+                                        .foregroundColor(condition.risk.color)
+                                }
                             }
-                        }
-                        
-                        Spacer()
-                        
-                        VStack {
-                            Text("Confidence")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                             
-                            Text("\(Int(condition.confidence * 100))%")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
+                            Spacer()
+                            
+                            // Enhanced confidence display
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("Confidence")
+                                    .font(.caption)
+                                    .foregroundColor(.lunaSecondaryText)
+                                
+                                Text("\(Int(condition.confidence * 100))%")
+                                    .font(.system(.title2, design: .rounded, weight: .bold))
+                                    .foregroundColor(.lunaPrimaryText)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.lunaSecondaryBackground)
+                                    .shadow(
+                                        color: Color.black.opacity(0.04),
+                                        radius: 4,
+                                        x: 0,
+                                        y: 2
+                                    )
+                            )
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
                     }
                     
-                    // Condition Description
-                    Text(conditionDescription)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .lineLimit(nil)
+                    // Enhanced Description
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("About This Condition")
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundColor(.lunaPrimaryText)
+                        
+                        Text(conditionDescription)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundColor(.lunaSecondaryText)
+                            .lineSpacing(2)
+                            .lineLimit(nil)
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.lunaCardBackground)
+                            .shadow(
+                                color: Color.black.opacity(0.04),
+                                radius: 6,
+                                x: 0,
+                                y: 3
+                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
+                    )
                     
-                    // Severity Alert
+                    // Enhanced Severity Alert
                     severityAlert
                     
-                    // Recommendations
+                    // Enhanced Recommendations
                     recommendationsSection
                     
-                    // Prevention Tips
+                    // Enhanced Prevention Tips
                     preventionSection
                 }
+                .padding(.top, 20)
                 .padding(.horizontal)
                 .padding(.bottom, 100) // Extra padding for tab bar
             }
@@ -103,16 +162,16 @@ struct DentalDetailView: View {
     
     // MARK: - Computed Properties
     
-    private var conditionImageURL: String {
-        // In a real app, these would be actual URLs or local images
+    private var conditionImageName: String {
+        // Using local assets from Assets.xcassets
         switch condition.name {
-        case "Calculus": return "https://example.com/calculus.jpg"
-        case "Caries": return "https://example.com/caries.jpg"
-        case "Gingivitis": return "https://example.com/gingivitis.jpg"
-        case "Tooth Discoloration": return "https://example.com/discoloration.jpg"
-        case "Mouth Ulcer": return "https://example.com/ulcer.jpg"
-        case "Hypodontia": return "https://example.com/hypodontia.jpg"
-        default: return ""
+        case "Calculus": return "tartar"  // Maps to existing tartar asset
+        case "Caries": return "caries"   // Maps to existing caries asset  
+        case "Gingivitis": return "gingivitis" // Maps to existing gingivitis asset
+        case "Tooth Discoloration": return "discoloration" // Maps to existing discoloration asset
+        case "Mouth Ulcer": return "ulcer" // Maps to existing ulcer asset
+        case "Hypodontia": return "hypodontia" // Maps to existing hypodontia asset
+        default: return "caries" // Fallback to caries image
         }
     }
     
@@ -223,28 +282,42 @@ struct DentalDetailView: View {
     }
     
     private var recommendationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("Recommended Actions")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundColor(.lunaPrimaryText)
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 ForEach(recommendations, id: \.self) { recommendation in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: 12) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.blue)
-                            .font(.caption)
+                            .foregroundColor(.lunaPrimary)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(.top, 2)
                         
                         Text(recommendation)
-                            .font(.body)
-                            .foregroundColor(.primary)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundColor(.lunaPrimaryText)
+                            .lineSpacing(1)
                     }
                 }
             }
         }
-        .padding()
-        .background(Color(UIColor.systemGray6))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.lunaCardBackground)
+                .shadow(
+                    color: Color.black.opacity(0.04),
+                    radius: 6,
+                    x: 0,
+                    y: 3
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.lunaSecondaryBackground.opacity(0.5), lineWidth: 1)
+        )
     }
     
     private var recommendations: [String] {
@@ -333,28 +406,57 @@ struct DentalDetailView: View {
     }
     
     private var preventionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Prevention Tips")
-                .font(.title2)
-                .fontWeight(.bold)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                Image(systemName: "shield.fill")
+                    .foregroundColor(.lunaSafeGreen)
+                    .font(.system(size: 20, weight: .medium))
+                
+                Text("Prevention Tips")
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundColor(.lunaPrimaryText)
+            }
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 ForEach(preventionTips, id: \.self) { tip in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "shield.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .foregroundColor(.lunaSafeGreen)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(.top, 2)
                         
                         Text(tip)
-                            .font(.body)
-                            .foregroundColor(.primary)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundColor(.lunaPrimaryText)
+                            .lineSpacing(1)
                     }
                 }
             }
         }
-        .padding()
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.lunaSafeGreen.opacity(0.08),
+                            Color.lunaSafeGreen.opacity(0.04)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .shadow(
+                    color: Color.black.opacity(0.04),
+                    radius: 6,
+                    x: 0,
+                    y: 3
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.lunaSafeGreen.opacity(0.2), lineWidth: 1)
+        )
     }
     
     private var preventionTips: [String] {

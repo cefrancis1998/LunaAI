@@ -262,9 +262,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions, issues, or feature requests:
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/Luna/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/Luna/discussions)
-- **Email**: support@lunadentalapp.com
+- **Issues**: [GitHub Issues](https://github.com/cefrancis1998/Luna/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cefrancis1998/Luna/discussions)
+
 
 ## 🏆 Acknowledgments
 
